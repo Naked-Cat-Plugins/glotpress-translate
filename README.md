@@ -43,6 +43,33 @@ every project, or into a project's own `.claude/skills/` to scope it to that pro
 - `pt-ao90` — Portuguese (Portugal), post-AO90 spelling. Auto-derived from `pt`, not composed
   directly.
 
+## Resources
+
+Official pt-PT sources this skill caches and consults (see `SKILL.md` Phase 2.6 for the sync
+mechanics):
+
+- [Official pt-PT glossary](https://translate.wordpress.org/locale/pt/default/glossary/) —
+  translate.wordpress.org's consolidated Portuguese (Portugal) glossary; source of
+  `references/glossario-pt-pt.csv`, refreshed via `scripts/update-glossary.sh`.
+- [Guia de Tradutores pt_PT](https://pt.wordpress.org/traducoes/guia-de-tradutores-portugues-de-portugal-pt_pt/) —
+  the WordPress Portuguese Community's own translator guide (orthography, register, capitalization,
+  adverb usage); source of `references/regras-pt.md`.
+- [translate.wordpress.org — pt locale](https://translate.wordpress.org/locale/pt/) — the broader
+  reference tier this skill searches for how other, unrelated projects translated an ambiguous
+  term, when `use_web_references` is on.
+
+Related projects:
+
+- [Naked-Cat-Plugins/glotpress-abilities](https://github.com/Naked-Cat-Plugins/glotpress-abilities) —
+  the companion WordPress plugin this skill orchestrates over MCP.
+- [WordPress/mcp-adapter](https://github.com/WordPress/mcp-adapter) — bridges the WordPress
+  Abilities API (what glotpress-abilities registers its abilities through) to MCP clients like
+  Claude Code.
+- [Introducing the Abilities API](https://make.wordpress.org/core/2025/09/17/introducing-the-abilities-api/) —
+  the WordPress core announcement for the API this whole chain is built on.
+- [GlotPress](https://wordpress.org/plugins/glotpress/) — the WordPress translation management
+  plugin this skill ultimately reads from and writes to.
+
 ## Attribution
 
 The cache/staleness-check/refresh pattern in `scripts/check-glossary.sh` and
