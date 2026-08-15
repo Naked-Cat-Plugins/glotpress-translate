@@ -35,6 +35,20 @@ pt/pt-br/pt-ao90 locale handling, is documented in [`SKILL.md`](SKILL.md).
 Copy this folder into `~/.claude/skills/glotpress-translate/` for a user-level skill available in
 every project, or into a project's own `.claude/skills/` to scope it to that project.
 
+## Instance-specific state stays out of this repo
+
+Everything this skill actually relies on for translation quality — the project/global glossary,
+prior translations used for style and cross-project consistency, GlotPress-admin credentials —
+lives in *your* GlotPress site's database, not in this repo. Cloning this repo gets you the
+workflow, not any of that accumulated data; you start from zero on your own instance.
+
+The one place this skill keeps local, instance-specific facts on disk is
+`references/local-notes.md` (see `SKILL.md` Phase 2.6) — a gitignored file for recording
+deliberate divergences between your own glossary and the official pt-PT community glossary (e.g.
+"we chose X over the official Y, don't auto-correct it"). It's never committed, so a fresh clone
+won't have one and will treat every such difference as a fresh candidate to ask you about, not an
+already-settled decision from someone else's instance.
+
 ## Locales
 
 - `pt`: Portuguese (Portugal), pre-AO90 spelling. The only variant with dedicated cached

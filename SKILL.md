@@ -140,7 +140,7 @@ proceeding, since it's a one-way replacement of live content).
      entirely — its `en` text doesn't match any existing glossary term under *any* part of
      speech. **Never propose a term that already exists in ours under any part of speech**, even
      if the official translation differs from ours — that's a deliberate divergence to leave
-     alone, not something to silently "fix" (see the settings/configurações note below).
+     alone, not something to silently "fix" (see `references/local-notes.md` below).
    - Present the candidate list (term, pt, pos) and ask the user to confirm before calling
      `add-glossary-entries` — same confirmation requirement as Phase 6, just earlier in the flow
      and sourced differently (this is "add what the official glossary already has and we're
@@ -148,9 +148,14 @@ proceeding, since it's a one-way replacement of live content).
    - The official CSV sometimes has curly quotes or trailing punctuation/parentheses in term names
      (e.g. `cheating, uh?`, `on/off (adj)`) that `add-glossary-entries` will reject — see the
      term-validation note in Safety/cost notes below before submitting.
-   - **Known, deliberate divergence**: our glossary has `settings` → "configurações"; the official
-     glossary says "opções". This was a considered decision (2026-07-30), not an oversight —
-     never "correct" it during a sync, and don't re-raise it with the user once it's been settled.
+   - **Local, instance-specific divergences**: if `references/local-notes.md` exists, read it and
+     honor whatever deliberate glossary divergences it records — never "correct" a listed term to
+     match the official CSV, and don't re-raise it with the user once it's marked settled there.
+     This file is **not part of the public skill** (it's gitignored): it holds facts about *this*
+     GlotPress instance's own glossary decisions, not portable guidance. A fresh clone of this
+     repo on a different GlotPress instance won't have this file, won't have any divergences
+     recorded, and should treat every official-vs-ours difference as a fresh candidate for Phase 6
+     rather than an already-settled one.
 
 ### Phase 3 — Translate
 
