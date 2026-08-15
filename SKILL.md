@@ -180,8 +180,10 @@ For each string from Phase 1:
   usage. Refresh it via Phase 2's sync step when stale, not on every run.
 - **Punctuation spacing for `pt`** (this skill's own house convention, not from the official
   guide): no space before `: ; ! ?`; render an ellipsis as one character `…`, not three dots
-  `...`. Doesn't apply to other locales — use each locale's own typographic convention instead
-  (French, for example, *does* use a space before `: ; ! ?` — the opposite rule).
+  `...`; never use an em dash (`—`) — rephrase with a comma, colon, semicolon, or parentheses
+  instead, depending on context. Doesn't apply to other locales — use each locale's own
+  typographic convention instead (French, for example, *does* use a space before `: ; ! ?` — the
+  opposite rule).
 - **Non-text elements stay intact** (every locale, not just `pt`): HTML tags and shortcodes
   (`<strong>`, `<a href="%s">`, `[shortcode]`) — translate the surrounding text, never the
   tag/shortcode syntax itself. Keyboard shortcuts and technical tokens stay as-is (`Ctrl+S`,
