@@ -76,6 +76,19 @@ Then make a **separate** call with `status: "fuzzy"`, and if `include_waiting`, 
 the project, not just the ones actually needing work. One call per status is the reliable way to
 combine categories. See the ability's own input schema description for the exact caveat.
 
+**A reworded original is invisible here.** When originals are re-imported after the source
+wording changed, GlotPress fuzzy-matches and rewrites the existing original's English *in place*
+rather than adding a new one — the import reports this as `originals_fuzzied`. If the attached
+translation was `current`, GlotPress demotes it to `fuzzy` and the call above catches it. **If it
+was `waiting`, nothing happens to it**: it stays `waiting`, still describing English that no
+longer exists, and appears in neither `untranslated` nor `fuzzy`.
+
+So `include_waiting` is not only about not trampling someone else's pending work — it is also the
+flag for re-checking translations against originals that may have been reworded since. Turn it on
+when the project has `waiting` translations and the plugin has had a release (or an originals
+import) since they were written, and compare each one against its current `singular` rather than
+assuming it still matches.
+
 Combine the results from these calls into your working list of strings to translate. **Do not**
 include a `status: "current"` fetch here by default — already-approved translations are not
 targets to retranslate unless the user explicitly asked to review/improve existing translations
@@ -91,13 +104,62 @@ proceeding, since it's a one-way replacement of live content).
      `project_path`) for the locale-wide glossary.
    - Merge both into one term → translation map. On conflict, the project-scoped glossary wins.
 
-2. **Existing translations in this same project (style/tone/register reference)**
-   - `nakedcat-glotpress/get-strings` with `status: "current"`.
-   - If `total` is large (rough guideline: > 150-200), don't fetch exhaustively just for style
-     calibration — pull one or two pages as a representative sample. The point is to match this
-     project's existing tone, not to load its entire translated corpus into context.
+2. **The translated plugin's own source code (always — not flag-gated)**
 
-3. **Cross-project consistency** (only if `check_other_projects`)
+   `get-strings` gives each string a `references` list (`src/edit.js:95`, `includes/foo.php:327`),
+   but those are just paths — worthless without a checkout to resolve them against. Locate one
+   **before** translating, not only when a string turns out to be ambiguous: seeing whether a
+   string is a button, a heading, a placeholder, a `help` blurb, or a `<select>` option routinely
+   changes the correct translation (gender/number agreement with the surrounding label, imperative
+   vs. infinitive, sentence case vs. title). It's the difference between guessing and knowing.
+
+   - **If the plugin is one of ours** (Webdados / Naked Cat Plugins): invoke the
+     `nakedcat-plugin-inventory` skill and read the `Local Path` column for that plugin. Don't
+     re-scan the filesystem by hand — that's exactly what the inventory caches.
+   - **If it isn't ours**: check whether a copy exists in the local dev site at
+     `/Users/marcoalmeida/Documents/Websites/_local/wordpress-testing/app/public` (normally under
+     `wp-content/plugins/<slug>/`, occasionally `wp-content/themes/<slug>/`). Third-party plugins
+     being translated here are usually installed there already.
+   - **If neither turns up a checkout**, say so once and carry on translating from the GlotPress
+     `context`/`extracted_comments` alone — a missing checkout is a reason to lean harder on
+     Phase 3's "skip when genuinely unsure" rule, not a reason to stop or to guess more freely.
+
+   Read the referenced files with `Read`/`Grep`. This is filesystem work, not an ability call, and
+   it's free — never skip it on the assumption that short UI strings are self-explanatory.
+
+3. **Existing translations in this same project — register *and* this plugin's own glossary**
+
+   These serve two different jobs, and conflating them is how wrong terminology gets shipped:
+
+   - **Register/tone.** How formal is it, infinitive or imperative, how are help texts phrased. A
+     sample of a page or two settles this.
+   - **This plugin's own glossary.** The binding record of how its recurring terms have already
+     been translated — the field type names, the domain nouns, the words that appear in twenty
+     strings and must not appear in two forms. This **cannot be sampled**. Either you have the
+     string that shows how a term was translated, or you are guessing at it.
+
+   So: **fetch the complete `current` set by default.** `per_page` caps at 200, so for almost
+   every project here that is one or two calls — cheap next to shipping a term that contradicts
+   the twenty strings around it.
+
+   - `nakedcat-glotpress/get-strings` with `status: "current"`, paginating to the end.
+   - Sample instead **only** when the set is large enough to make that genuinely impractical
+     (roughly 600+, i.e. four or more calls). When you do sample, you have a register reference
+     and no glossary: a term you cannot look up is then a Phase 3 "genuinely unsure" skip, not
+     something to compose and report as "composed independently from context".
+   - A locally installed `.po` for the same locale
+     (`wp-content/languages/plugins/<slug>-<locale>.po` on the dev site) is greppable and free,
+     which is useful on a project too large to fetch whole. Treat it as a **last-resort fallback,
+     not a source of truth**: it is exported at release time, so it can be missing anything
+     approved since, and it can still hold a wording that has since been corrected in GlotPress.
+     Never let it override a value GlotPress holds, and don't report it as a reference source when
+     the authoritative set was available.
+   - If the project has **no** `current` translations at all (a brand-new project at 0%), there's
+     no in-project style reference to calibrate against — that's a good reason to turn
+     `check_other_projects` on for the run even though it defaults to off, and to say so in the
+     Phase 5 report.
+
+4. **Cross-project consistency** (only if `check_other_projects`)
    - Take the `singular` strings from Phase 1, chunk into groups of ≤100 (the ability's hard cap),
      and call `nakedcat-glotpress/find-translations-in-other-projects` with `locale` +
      `exclude_project_path` set to the project being translated.
@@ -105,19 +167,20 @@ proceeding, since it's a one-way replacement of live content).
      terminology — if two other projects already agree on a translation for the same string,
      don't invent a third wording without a good reason.
 
-4. **Local file references** (only if `use_local_file_references`) — use `Grep`/`Read` directly on
+5. **Local file references** (only if `use_local_file_references`) — use `Grep`/`Read` directly on
    other plugins'/themes' translation files (`languages/*.po`, bundled `.pot` files) or WordPress
    core's own translations on disk for the same locale. This is filesystem work, not an ability
-   call.
+   call. Distinct from step 2: that one reads the *translated plugin's own* source for context on
+   what each string does; this one reads *other* projects' finished translations for terminology.
 
-5. **Web references** (only if `use_web_references`) — use `WebSearch`/`WebFetch` for how a term
+6. **Web references** (only if `use_web_references`) — use `WebSearch`/`WebFetch` for how a term
    is conventionally translated elsewhere (e.g. WordPress.org's own glossary/translation for the
    same locale). Prefer official/well-established sources over random pages. For `pt` specifically,
    translate.wordpress.org itself is a strong reference tier beyond our own GlotPress instance —
    search how *other, unrelated* WordPress.org plugins/themes translated the same ambiguous term;
    the Community's own consolidated usage is a better signal than a generic web search.
 
-6. **pt-specific: official glossary + rules cache sync** (only when `locale` is exactly `pt` —
+7. **pt-specific: official glossary + rules cache sync** (only when `locale` is exactly `pt` —
    never `pt-ao90` or `pt-br`, see the locale note above). This skill keeps its own cached
    snapshot of the WordPress Portuguese Community's official pt-PT glossary and translator guide,
    separate from (and in addition to) the GlotPress project/global glossary from step 1.
@@ -158,6 +221,21 @@ proceeding, since it's a one-way replacement of live content).
      rather than an already-settled one.
 
 ### Phase 3 — Translate
+
+**Terminology precedence.** Where two sources disagree about a term, the higher one wins:
+
+1. The project-scoped GlotPress glossary.
+2. The locale-wide global glossary.
+3. **This project's own existing approved translations** (Phase 2.3) — binding wherever the
+   glossaries are silent, which is most of the time. A glossary covers general WordPress and
+   WooCommerce vocabulary; it will not tell you how *this plugin* already renders its own field
+   type names or its domain nouns. Matching those is not a nicety: two words for one thing inside
+   one settings screen reads as a bug.
+4. Cross-project matches, local file references, web references.
+5. Composed from the plugin's own source and the string's context.
+
+Where 3 contradicts 1 or 2, the glossary still wins — but say so in the Phase 5 report, naming the
+string, so the older translation can be brought into line rather than left as a second spelling.
 
 For each string from Phase 1:
 
@@ -200,13 +278,16 @@ For each string from Phase 1:
   deliberately skipped, with why. (If the user explicitly asks for uncertain strings to be
   submitted anyway for human review instead of skipped, use `status: "fuzzy"` for those — but
   that's an opt-in exception, not the default.) **Before concluding a string is ambiguous, read
-  the actual source at its `references` file:line** (from `get-strings`) — many ambiguities
-  resolve once you see how the string is actually used: is it a button or a heading? Is the
-  adjacent value a count, a date, a name? The surrounding code often settles it without needing to
-  skip or flag anything.
+  the actual source at its `references` file:line** (from `get-strings`, resolved against the
+  checkout located in Phase 2.2) — many ambiguities resolve once you see how the string is
+  actually used: is it a button or a heading? Is the adjacent value a count, a date, a name? The
+  surrounding code often settles it without needing to skip or flag anything. Only when no
+  checkout was found does a string stay genuinely ambiguous on context grounds.
 - Note which source most directly informed each translation as you go (glossary term,
-  cross-project match, existing-project style, local file reference, web reference, or composed
-  independently with no external reference) — Phase 5 reports a short summary of this.
+  cross-project match, existing-project style, the plugin's own source code, local file reference,
+  web reference, or composed independently with no external reference) — Phase 5 reports a short
+  summary of this. "Composed from the plugin's own source" is a real, reportable source, not the
+  same as "composed independently with no reference".
 
 ### Phase 4 — Submit
 
@@ -344,6 +425,11 @@ treating it as a generic failure.
   glossary entry you've actually composed and (for glossary entries) the user has confirmed.
 - Batch caps: `update-translations` and `find-translations-in-other-projects` cap at 100 items
   per call, `add-glossary-entries` at 50 — chunk larger sets.
+- `get-strings` has **no search parameter**, and its results are ordered by the string's source
+  reference (file, then line), not by `original_id`. So there is no way to look up one known
+  string by id, and paging around trying to land on it wastes more calls than one fetch at the
+  size you actually need. Decide the page size up front and take the whole set in as few calls as
+  possible.
 - `add-glossary-entries` validates `term` strictly: ASCII only, must start and end with a word
   character. Curly quotes, trailing punctuation, or parenthetical qualifiers in a term (e.g.
   `cheating, uh?`, `on/off (adj)`) get rejected — sanitize first (straight apostrophes; move
