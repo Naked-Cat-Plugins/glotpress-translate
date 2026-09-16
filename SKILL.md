@@ -267,19 +267,24 @@ For each string from Phase 1:
   instead, depending on context. Doesn't apply to other locales — use each locale's own
   typographic convention instead (French, for example, *does* use a space before `: ; ! ?` — the
   opposite rule).
-- **A UI path names what the UI actually shows** (every locale). When a string points somewhere
-  in the admin, "under WooCommerce > Settings > Tax", "em IVA & VIES > Declaração recapitulativa",
-  every label in that path is its **own original** in the same project. Look each one up before
-  translating the path, and use whatever that original's translation currently is:
-  - Translated (`current`) → use that translation, exactly, so the two agree.
-  - **Untranslated → leave the label in English**, because English is what the user will see in the
-    menu. A path translated into a menu name that does not exist sends somebody hunting for a screen
-    they cannot find, which is worse than a sentence that mixes languages.
-  - Never compose a plausible-sounding translation of a menu label inside another string. That is
-    inventing UI, and it will disagree with the menu whichever way the label is later translated.
-  - The dependency runs both ways: when a menu label later gets translated, every string naming it
-    has to be revisited. Say so in the Phase 5 report whenever a path was left in English for this
-    reason, and name the label originals involved, so they can be done together.
+- **A UI path is built from terms, not from words** (every locale). When a string sends somebody
+  somewhere in the admin, "under WooCommerce > Settings > Tax", every label in that path is its own
+  original in the same project. The path must use the term that original is translated with, looked
+  up, never a fresh translation composed for this one sentence however obvious it looks. A menu
+  label is a name: two names for one menu is the same defect in a translation that it would be in
+  code, and the reader is the one who pays for it, hunting for a screen that is called something
+  else.
+- **An untranslated label in a path is the first thing to translate, not something to work around.**
+  If a label has no translation yet, translate that original first, then write the path with it.
+  Both ways out of doing that are worse: leaving the label in English inside an otherwise translated
+  sentence, or inventing a translation for it here, each leave the product calling one menu two
+  things. Naming it once, in its own string, is the only version that ends with one name.
+  - So a path is a **dependency**, not a phrase. Pull the label originals into the working set from
+    Phase 1, translate them, and submit them in the same batch as the strings that point at them, so
+    the two can never be approved apart.
+  - Report it in Phase 5: which labels were translated because a path needed them, and which strings
+    depend on them. If for any reason a label could not be settled, that is a Phase 3 skip for every
+    string naming it, not a guess.
 - **Non-text elements stay intact** (every locale, not just `pt`): HTML tags and shortcodes
   (`<strong>`, `<a href="%s">`, `[shortcode]`) — translate the surrounding text, never the
   tag/shortcode syntax itself. Keyboard shortcuts and technical tokens stay as-is (`Ctrl+S`,
