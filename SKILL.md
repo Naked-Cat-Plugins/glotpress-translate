@@ -267,6 +267,19 @@ For each string from Phase 1:
   instead, depending on context. Doesn't apply to other locales — use each locale's own
   typographic convention instead (French, for example, *does* use a space before `: ; ! ?` — the
   opposite rule).
+- **A UI path names what the UI actually shows** (every locale). When a string points somewhere
+  in the admin, "under WooCommerce > Settings > Tax", "em IVA & VIES > Declaração recapitulativa",
+  every label in that path is its **own original** in the same project. Look each one up before
+  translating the path, and use whatever that original's translation currently is:
+  - Translated (`current`) → use that translation, exactly, so the two agree.
+  - **Untranslated → leave the label in English**, because English is what the user will see in the
+    menu. A path translated into a menu name that does not exist sends somebody hunting for a screen
+    they cannot find, which is worse than a sentence that mixes languages.
+  - Never compose a plausible-sounding translation of a menu label inside another string. That is
+    inventing UI, and it will disagree with the menu whichever way the label is later translated.
+  - The dependency runs both ways: when a menu label later gets translated, every string naming it
+    has to be revisited. Say so in the Phase 5 report whenever a path was left in English for this
+    reason, and name the label originals involved, so they can be done together.
 - **Non-text elements stay intact** (every locale, not just `pt`): HTML tags and shortcodes
   (`<strong>`, `<a href="%s">`, `[shortcode]`) — translate the surrounding text, never the
   tag/shortcode syntax itself. Keyboard shortcuts and technical tokens stay as-is (`Ctrl+S`,
