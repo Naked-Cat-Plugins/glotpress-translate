@@ -241,8 +241,12 @@ string, so the older translation can be brought into line rather than left as a 
 from a legal text (an EU regulation or directive, a national law), the official wording in the
 target language decides, above the global glossary: EUR-Lex for the binding text, and the EU's own
 pages about it (Your Europe) where the two disagree or the legal text is silent. Record each such
-term in that project's own glossary (`add-glossary-entries` with `project_path`), so it wins at
-level 1 for that project only and the global glossary stays right for everything else.
+term in the **global** glossary, like any other reusable term. Only a term that contradicts an
+existing global entry (the law's "label" is "rótulo" where the global glossary says "legenda") goes
+into that project's own glossary (`add-glossary-entries` with `project_path`), where it wins at
+level 1 for that project only. A project glossary holds exceptions to the global one, nothing
+else: a term that agrees with the global glossary, or that no other project contradicts, belongs
+in the global one.
 
 For each string from Phase 1:
 
