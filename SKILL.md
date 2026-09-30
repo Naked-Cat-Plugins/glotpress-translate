@@ -237,6 +237,13 @@ proceeding, since it's a one-way replacement of live content).
 Where 3 contradicts 1 or 2, the glossary still wins — but say so in the Phase 5 report, naming the
 string, so the older translation can be brought into line rather than left as a second spelling.
 
+**A plugin that implements a law follows the law's own wording.** Where the plugin's terms come
+from a legal text (an EU regulation or directive, a national law), the official wording in the
+target language decides, above the global glossary: EUR-Lex for the binding text, and the EU's own
+pages about it (Your Europe) where the two disagree or the legal text is silent. Record each such
+term in that project's own glossary (`add-glossary-entries` with `project_path`), so it wins at
+level 1 for that project only and the global glossary stays right for everything else.
+
 For each string from Phase 1:
 
 - Apply glossary terms exactly where they match, before anything else.
