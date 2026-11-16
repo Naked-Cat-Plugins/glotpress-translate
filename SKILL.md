@@ -360,22 +360,52 @@ confident about was already left out per Phase 3, not included here as `"fuzzy"`
 - If the whole call returns a `WP_Error` because `locale` is `pt-ao90` and the project also has a
   `pt` set: that's the plugin's `gp-convert-pt-ao90` guard, not a bug. Translate `pt` instead —
   `pt-ao90` syncs automatically.
-- Read every item's `result`: `unchanged` means an identical translation already existed (fine,
-  not an error); `error` needs attention — check `error_message` (often a placeholder-safety
-  rejection, or an `original_id` that doesn't belong to this project).
+- Read every item's `result`:
+  - `created`: a new translation row, with the status you sent.
+  - `approved`: the same text was already `waiting` or `fuzzy` and you sent it as `current`, so
+    that row was approved in place (the previous `current`, if any, became `old`). Only happens on
+    a `current` submission, so only with `auto_approve` or an explicit instruction.
+  - `unchanged`: an identical translation already had this status or a higher one (`current`
+    above `waiting` above `fuzzy`). Fine, not an error. The ability never demotes: the same text
+    sent as `waiting` stays `current` if it already was.
+  - `error`: needs attention. Check `error_message` (often a placeholder-safety rejection, or an
+    `original_id` that doesn't belong to this project).
+- **Approving what is already waiting.** When the user asks to publish translations already in
+  the `waiting` queue (yours from an earlier run, or anyone's), resubmitting the same text as
+  `current` approves them (`approved`). For a whole set, `nakedcat-glotpress/review-translations`
+  with the `original_id`s from a `get-strings` `status: "waiting"` call does it without sending
+  the texts back (100 per call); run `get-strings` with `stale_only: true` first and leave out the
+  stale ones, whose English changed after they were written.
+- **Check the warnings.** Every result has a `warnings` list (`plural_index`, `key`, `message`):
+  GlotPress's checks for placeholders, HTML tags, length, initial capitals and so on. A warning
+  does not stop the save, so the translation is already in GlotPress with it. For each one:
+  - A real problem (a placeholder or tag lost or changed, a missing or extra capital that should
+    match the original): fix the translation and resubmit it in a follow-up call.
+  - A false alarm (German capitalising a noun where the English starts in lowercase, a translation
+    legitimately much longer or shorter): leave the translation as it is and say why in Phase 5.
+    Don't discard it unasked: `nakedcat-glotpress/discard-warnings` (`translation_id` + `key`)
+    removes it, but only when the user asks or has said to clear checked false alarms.
+  To check a whole set rather than this run's results, `get-strings` with `with_warnings: true`
+  lists every string with warnings, and `list-projects-translation-status` gives the
+  `warnings_count` per set.
 
 ### Phase 5 — Report
 
 Tell the user, concretely:
 - How many strings were submitted (`created`), broken down by status — how many `waiting`, how
   many `fuzzy`, and (only if `auto_approve` was used) how many `current`.
-- How many were already correct (`unchanged`), how many failed (`error`, with why).
+- How many were already correct (`unchanged`), how many existing `waiting`/`fuzzy` translations
+  were approved (`approved`, only on `current` submissions), how many failed (`error`, with why).
+- **Warnings**: how many translations came back with warnings, and for each one, what it was and
+  what you did: fixed and resubmitted, or left as a false alarm with the reason (e.g. "1 warning
+  left: \"Liste\" starts with a capital because German capitalises nouns"). Say if any were
+  discarded and on whose instruction. If none came back, say so in one line.
 - If nothing was set to `current`, say so plainly (e.g. "all N translations are in the `waiting`
   queue for review — nothing was published live") so it's clear no existing or new translation
   went live without being asked for.
 - **How many strings were skipped for being genuinely uncertain, and why** (e.g. "3 skipped —
   ambiguous without more context: ..."). This is an expected, routine outcome now (see Phase 3),
-  not an edge case — report the count plainly alongside `created`/`unchanged`/`error`, not buried.
+  not an edge case — report the count plainly alongside `created`/`approved`/`unchanged`/`error`, not buried.
 - **Always end with a short reference-source breakdown** — where the translations actually came
   from, not just that context was "gathered." One line per source that was actually used, e.g.:
   "19 matched existing translations in other projects (shop-as-client-pro), 4 used glossary
@@ -445,15 +475,18 @@ treating it as a generic failure.
 
 ## Safety / cost notes
 
-- Every ability requires the connected user to be a **GlotPress administrator**
-  (`GP::$permission->current_user_can('admin')`; WordPress `manage_options` is not required). A
+- The abilities this skill calls require the connected user to be a **GlotPress administrator**
+  (`GP::$permission->current_user_can('admin')`; WordPress `manage_options` is not required), except
+  `review-translations` and `discard-warnings`, which need GlotPress approve permission on the set. A
   permission error is not something to route around — surface it to the user.
-- Only `nakedcat-glotpress/update-translations` and `nakedcat-glotpress/add-glossary-entries`
-  write anything; the other four abilities are read-only — call them as freely as needed for
-  context, but don't call either write ability speculatively; only submit a translation or
-  glossary entry you've actually composed and (for glossary entries) the user has confirmed.
-- Batch caps: `update-translations` and `find-translations-in-other-projects` cap at 100 items
-  per call, `add-glossary-entries` at 50 — chunk larger sets.
+- The read-only abilities (`list-projects-translation-status`, `get-glossary`, `get-strings`,
+  `find-translations-in-other-projects`) can be called as freely as needed for context. Every
+  other ability writes. This skill uses `update-translations` and `add-glossary-entries`, plus
+  `review-translations` and `discard-warnings` only when the user asks (Phase 4); don't call any
+  of them speculatively. Only submit a translation or glossary entry you've actually composed and
+  (for glossary entries) the user has confirmed.
+- Batch caps: `update-translations`, `review-translations`, `discard-warnings` and
+  `find-translations-in-other-projects` cap at 100 items per call, `add-glossary-entries` at 50 — chunk larger sets.
 - `get-strings` has **no search parameter**, and its results are ordered by the string's source
   reference (file, then line), not by `original_id`. So there is no way to look up one known
   string by id, and paging around trying to land on it wastes more calls than one fetch at the

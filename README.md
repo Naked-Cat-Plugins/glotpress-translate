@@ -25,7 +25,7 @@ pt/pt-br/pt-ao90 locale handling, is documented in [`SKILL.md`](SKILL.md).
 - The [`nakedcat-glotpress-abilities`](https://github.com/Naked-Cat-Plugins/glotpress-abilities)
   plugin, installed and active on the target GlotPress site.
 - An Abilities-API-to-MCP bridge connecting those abilities to Claude Code as MCP tools. The
-  [`mcp-adapter`](https://github.com/WordPress/mcp-adapter) plugin is the one this skill assumes.
+  [MCP Adapter](https://wordpress.org/plugins/mcp-adapter/) plugin (`mcp-adapter`, on WordPress.org) is the one this skill assumes.
   See glotpress-abilities' own README, ["Connecting Claude to these
   abilities"](https://github.com/Naked-Cat-Plugins/glotpress-abilities#connecting-claude-to-these-abilities),
   for the connection walkthrough.
