@@ -17,6 +17,13 @@ WordPress database directly — every GlotPress read/write goes through the abil
 `nakedcat-glotpress-abilities` plugin's own `README.md` for the full schema of each ability; this
 skill only summarizes what's needed to call them correctly.
 
+> **Only the MCP, never anything else (Marco, 2026-11-26).** Every read and write on
+> translations.nakedcatplugins.com goes through its MCP connector ("Naked Cat Plugins
+> Translations", the `nakedcat-glotpress/*` abilities): translation status, strings, existing
+> translations, glossaries, packages. Never the site's public REST API, curl, downloaded language
+> packs, or `.po`/`.mo` files on disk as a stand-in for what GlotPress holds. The API is allowed
+> only when Marco authorizes it for that task.
+
 > **Prerequisite:** the abilities must be reachable as MCP tools (see the plugin README's
 > "Connecting Claude to these abilities" section for setting up the `mcp-adapter` connection). If
 > ability calls aren't available, stop and tell the user to configure that first — don't try to
