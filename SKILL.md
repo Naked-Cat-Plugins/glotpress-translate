@@ -17,12 +17,11 @@ WordPress database directly — every GlotPress read/write goes through the abil
 `nakedcat-glotpress-abilities` plugin's own `README.md` for the full schema of each ability; this
 skill only summarizes what's needed to call them correctly.
 
-> **Only the MCP, never anything else (Marco, 2026-11-26).** Every read and write on
-> translations.nakedcatplugins.com goes through its MCP connector ("Naked Cat Plugins
-> Translations", the `nakedcat-glotpress/*` abilities): translation status, strings, existing
-> translations, glossaries, packages. Never the site's public REST API, curl, downloaded language
-> packs, or `.po`/`.mo` files on disk as a stand-in for what GlotPress holds. The API is allowed
-> only when Marco authorizes it for that task.
+> **Only the abilities, never anything else.** Every read and write on the GlotPress site goes
+> through its MCP connection (the `nakedcat-glotpress/*` abilities): translation status, strings,
+> existing translations, glossaries. Never the site's REST API, curl, downloaded language packs, or
+> `.po`/`.mo` files on disk as a stand-in for what GlotPress holds. The API is allowed only when the
+> user authorizes it for that task.
 
 > **Prerequisite:** the abilities must be reachable as MCP tools (see the plugin README's
 > "Connecting Claude to these abilities" section for setting up the `mcp-adapter` connection). If
@@ -154,13 +153,6 @@ proceeding, since it's a one-way replacement of live content).
      (roughly 600+, i.e. four or more calls). When you do sample, you have a register reference
      and no glossary: a term you cannot look up is then a Phase 3 "genuinely unsure" skip, not
      something to compose and report as "composed independently from context".
-   - A locally installed `.po` for the same locale
-     (`wp-content/languages/plugins/<slug>-<locale>.po` on the dev site) is greppable and free,
-     which is useful on a project too large to fetch whole. Treat it as a **last-resort fallback,
-     not a source of truth**: it is exported at release time, so it can be missing anything
-     approved since, and it can still hold a wording that has since been corrected in GlotPress.
-     Never let it override a value GlotPress holds, and don't report it as a reference source when
-     the authoritative set was available.
    - If the project has **no** `current` translations at all (a brand-new project at 0%), there's
      no in-project style reference to calibrate against — that's a good reason to turn
      `check_other_projects` on for the run even though it defaults to off, and to say so in the
